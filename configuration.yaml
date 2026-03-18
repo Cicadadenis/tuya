@@ -1,0 +1,73 @@
+
+# Loads default set of integrations. Do not remove.
+default_config:
+
+# Load frontend themes from the themes folder
+frontend:
+  themes: !include_dir_merge_named themes
+
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+
+# ===========================
+# DuckDNS интеграция
+# ===========================
+duckdns:
+  domain: satana3301.duckdns.org      # твой поддомен
+  access_token: a0231407-3a2c-4cda-8d2e-9869dd0ae8e6
+                   # обновление IP каждые 5 минут
+
+homeassistant:
+  external_url: "https://satana3301.duckdns.org"
+  internal_url: "http://192.168.31.91:8123"  # локальный IP через HTTP
+  
+
+# ===========================
+# HTTP с SSL
+# ===========================
+http:
+  server_port: 8123                   # порт Home Assistant
+  ssl_certificate: /ssl/fullchain.pem
+  ssl_key: /ssl/privkey.pem
+
+device_tracker:
+  - platform: nmap_tracker
+    hosts: 192.168.31.0/24
+    home_interval: 10
+    interval_seconds: 60
+
+binary_sensor:
+  - platform: ping
+    host: 192.168.31.91
+    name: Home Assistant
+
+  - platform: ping
+    host: 192.168.31.100
+    name: Камера
+    
+  - platform: ping
+    host: 192.168.31.1
+    name: Роутер
+    count: 2
+
+input_boolean:
+  home_alarm:
+    name: Сигнализация
+    initial: off
+    
+input_text:
+  alarm_pin:
+    name: Ввод PIN
+    max: 4
+    
+    
+shell_command:
+  scan_ports: "nmap 192.168.31.91"
+    
+template:
+  - binary_sensor:
+      - name: "Свет стенки тревога"
+        state: >
+          {{ is_state('light.stenku', 'on') }}
+        device_class: motion
